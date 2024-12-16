@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
@@ -172,8 +173,8 @@ describe('CommentRepositoryPostgres', () => {
         date: firstCommentDate,
         thread: threadId,
         owner: firstUserId,
-        // eslint-disable-next-line camelcase
         is_delete: null,
+        like_count: 0,
         username: firstUsername,
       });
       // Check second comment expected value
@@ -183,8 +184,8 @@ describe('CommentRepositoryPostgres', () => {
         date: firstCommentDate,
         thread: threadId,
         owner: secondUserId,
-        // eslint-disable-next-line camelcase
         is_delete: null,
+        like_count: 0,
         username: secondUsername,
       });
       // Check if comment ascending
