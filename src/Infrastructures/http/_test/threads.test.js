@@ -225,6 +225,15 @@ describe('Threads endpoint', () => {
           credentials: { id: decodedPayload.id },
         },
       });
+      // Like comment 1
+      await server.inject({
+        method: 'PUT',
+        url: `/threads/${threadId}/comments/${firstCommentId}/likes`,
+        auth: {
+          strategy: 'forum_api_jwt',
+          credentials: { id: decodedPayload.id },
+        },
+      });
       // Add reply 1
       const replyResponse = await server.inject({
         method: 'POST',
@@ -280,6 +289,10 @@ describe('Threads endpoint', () => {
       const firstCommentDate = new Date(responseJson.data.thread.comments[0].date);
       const secondCommentDate = new Date(responseJson.data.thread.comments[1].date);
       expect(firstCommentDate.getTime()).toBeLessThanOrEqual(secondCommentDate.getTime());
+      // Check comment like
+      expect(responseJson.data.thread.comments[0].likeCount).toEqual(1);
+      // Check comment like
+      expect(responseJson.data.thread.comments[1].likeCount).toEqual(0);
       // Check all reply
       expect(responseJson.data.thread.comments[0].replies).toHaveLength(2);
       // Check reply deleted
