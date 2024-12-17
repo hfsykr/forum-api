@@ -33,6 +33,37 @@ const CommentsTableTestHelper = {
     return result.rows;
   },
 
+  async addCommentLike({ id, comment, owner }) {
+    const query = {
+      text: 'INSERT INTO comments_likes VALUES($1, $2, $3)',
+      values: [id, comment, owner],
+    };
+
+    await pool.query(query);
+  },
+
+  async findCommentsLikes(comment, owner) {
+    const query = {
+      text: 'SELECT id FROM comments_likes WHERE comment = $1 AND owner = $2',
+      values: [comment, owner],
+    };
+
+    const result = await pool.query(query);
+
+    return result.rows;
+  },
+
+  async getCommentsLikeCountById(id) {
+    const query = {
+      text: 'SELECT like_count FROM comments WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await pool.query(query);
+
+    return result.rows[0].like_count;
+  },
+
   async cleanTable() {
     await pool.query('DELETE FROM comments WHERE 1=1');
   },

@@ -355,4 +355,182 @@ describe('Comments endpoint', () => {
       });
     });
   });
+
+  describe('/threads/{threadId}/comments/{commentId}/likes endpoint', () => {
+    describe('when hit with unauthorized request', () => {
+      it('should response 401', async () => {
+        // Arrange
+        const threadId = 'thread-123';
+        const commentId = 'comment-123';
+        const server = await createServer(container);
+
+        // Action
+        const response = await server.inject({
+          method: 'PUT',
+          url: `/threads/${threadId}/comments/${commentId}/likes`,
+        });
+
+        // Assert
+        expect(response.statusCode).toEqual(401);
+      });
+    });
+
+    describe('when hit with authorized request', () => {
+      let decodedPayload;
+      let threadId;
+      let commentId;
+
+      beforeEach(async () => {
+        const server = await createServer(container);
+        // add user
+        await server.inject({
+          method: 'POST',
+          url: '/users',
+          payload: {
+            username: 'dicoding',
+            password: 'secret',
+            fullname: 'Dicoding Indonesia',
+          },
+        });
+        // login user
+        const loginResponse = await server.inject({
+          method: 'POST',
+          url: '/authentications',
+          payload: {
+            username: 'dicoding',
+            password: 'secret',
+          },
+        });
+        const loginResponseJson = JSON.parse(loginResponse.payload);
+        const accessToken = loginResponseJson.data.accessToken;
+        decodedPayload = await container.getInstance(AuthenticationTokenManager.name)
+          .decodePayload(accessToken);
+        // add thread
+        const threadResponse = await server.inject({
+          method: 'POST',
+          url: '/threads',
+          payload: {
+            title: 'Thread title submission 1',
+            body: 'Thread body submission 1',
+          },
+          auth: {
+            strategy: 'forum_api_jwt',
+            credentials: { id: decodedPayload.id },
+          },
+        });
+        const threadResponseJson = JSON.parse(threadResponse.payload);
+        threadId = threadResponseJson.data.addedThread.id;
+        // add comment
+        const commentResponse = await server.inject({
+          method: 'POST',
+          url: `/threads/${threadId}/comments`,
+          payload: {
+            content: 'Comment content submission 1',
+          },
+          auth: {
+            strategy: 'forum_api_jwt',
+            credentials: { id: decodedPayload.id },
+          },
+        });
+        const commentResponseJson = JSON.parse(commentResponse.payload);
+        commentId = commentResponseJson.data.addedComment.id;
+      });
+
+      it('should response 200 and success like', async () => {
+        // Arrange
+        const server = await createServer(container);
+
+        // Action
+        const response = await server.inject({
+          method: 'PUT',
+          url: `/threads/${threadId}/comments/${commentId}/likes`,
+          auth: {
+            strategy: 'forum_api_jwt',
+            credentials: { id: decodedPayload.id },
+          },
+        });
+
+        // Assert
+        const responseJson = JSON.parse(response.payload);
+        expect(response.statusCode).toEqual(200);
+        expect(responseJson.status).toEqual('success');
+        const commentsLikes = await CommentsTableTestHelper.findCommentsLikes(commentId, decodedPayload.id);
+        expect(commentsLikes).toHaveLength(1);
+      });
+
+      it('should response 200 and success unlike when hit 2 times', async () => {
+        // Arrange
+        const server = await createServer(container);
+
+        // Action
+        // Like
+        await server.inject({
+          method: 'PUT',
+          url: `/threads/${threadId}/comments/${commentId}/likes`,
+          auth: {
+            strategy: 'forum_api_jwt',
+            credentials: { id: decodedPayload.id },
+          },
+        });
+        // Unlike
+        const response = await server.inject({
+          method: 'PUT',
+          url: `/threads/${threadId}/comments/${commentId}/likes`,
+          auth: {
+            strategy: 'forum_api_jwt',
+            credentials: { id: decodedPayload.id },
+          },
+        });
+
+        // Assert
+        const responseJson = JSON.parse(response.payload);
+        expect(response.statusCode).toEqual(200);
+        expect(responseJson.status).toEqual('success');
+        const commentsLikes = await CommentsTableTestHelper.findCommentsLikes(commentId, decodedPayload.id);
+        expect(commentsLikes).toHaveLength(0);
+      });
+
+      it('should response 404 when thread not found', async () => {
+        // Arrange
+        const server = await createServer(container);
+
+        // Action
+        const response = await server.inject({
+          method: 'PUT',
+          url: `/threads/thread-456/comments/${commentId}/likes`,
+          auth: {
+            strategy: 'forum_api_jwt',
+            credentials: { id: decodedPayload.id },
+          },
+        });
+
+        // Assert
+        const responseJson = JSON.parse(response.payload);
+        expect(response.statusCode).toEqual(404);
+        expect(responseJson.status).toEqual('fail');
+        expect(responseJson.message).toEqual('thread tidak ditemukan');
+      });
+
+      it('should response 404 when comment not found', async () => {
+        // Arrange
+        const server = await createServer(container);
+
+        // Action
+        const response = await server.inject({
+          method: 'PUT',
+          url: `/threads/${threadId}/comments/comment-456/likes`,
+          auth: {
+            strategy: 'forum_api_jwt',
+            credentials: { id: decodedPayload.id },
+          },
+        });
+
+        // Assert
+        const responseJson = JSON.parse(response.payload);
+        expect(response.statusCode).toEqual(404);
+        expect(responseJson.status).toEqual('fail');
+        expect(responseJson.message).toEqual('comment tidak ditemukan');
+      });
+    });
+  });
 });

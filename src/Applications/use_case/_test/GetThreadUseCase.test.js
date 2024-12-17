@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
 const CommentRepository = require('../../../Domains/comments/CommentRepository');
 const ReplyRepository = require('../../../Domains/replies/ReplyRepository');
@@ -37,6 +38,7 @@ describe('GetThreadUseCase', () => {
             },
           ],
           content: 'Comment 1 content submission 1',
+          likeCount: 1,
         },
         {
           id: 'comment-456',
@@ -44,6 +46,7 @@ describe('GetThreadUseCase', () => {
           date: '2024-12-09T07:38:00.587Z',
           replies: [],
           content: '**komentar telah dihapus**',
+          likeCount: 0,
         },
       ],
     };
@@ -76,8 +79,8 @@ describe('GetThreadUseCase', () => {
             date: '2024-12-09T07:35:48.445Z',
             thread: threadId,
             owner: 'user-456',
-            // eslint-disable-next-line camelcase
             is_delete: false,
+            like_count: 1,
             username: 'user123',
           },
           {
@@ -86,8 +89,8 @@ describe('GetThreadUseCase', () => {
             date: '2024-12-09T07:38:00.587Z',
             thread: threadId,
             owner: 'user-789',
-            // eslint-disable-next-line camelcase
             is_delete: true,
+            like_count: 0,
             username: 'user456',
           },
         ],
@@ -101,7 +104,6 @@ describe('GetThreadUseCase', () => {
             date: '2024-12-09T07:45:00.587Z',
             comment: 'comment-123',
             owner: 'user-456',
-            // eslint-disable-next-line camelcase
             is_delete: true,
             username: 'user456',
           },
@@ -111,7 +113,6 @@ describe('GetThreadUseCase', () => {
             date: '2024-12-09T07:50:00.587Z',
             comment: 'comment-123',
             owner: 'user-123',
-            // eslint-disable-next-line camelcase
             is_delete: false,
             username: 'user123',
           },

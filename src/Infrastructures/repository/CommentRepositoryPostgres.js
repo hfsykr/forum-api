@@ -74,6 +74,58 @@ class CommentRepositoryPostgres extends CommentRepository {
 
     return result.rows;
   }
+
+  async verifyUserHasLikeComment(id, userId) {
+    const query = {
+      text: 'SELECT id FROM comments_likes WHERE comment = $1 AND owner = $2',
+      values: [id, userId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      return false;
+    };
+
+    return true;
+  }
+
+  async addCommentLike(commentId, userId) {
+    const id = `comment_like-${this._idGenerator()}`;
+    const query = {
+      text: 'INSERT INTO comments_likes VALUES($1, $2, $3)',
+      values: [id, commentId, userId],
+    };
+
+    await this._pool.query(query);
+  }
+
+  async deleteCommentLike(commentId, userId) {
+    const query = {
+      text: 'DELETE FROM comments_likes WHERE comment = $1 AND owner = $2',
+      values: [commentId, userId],
+    };
+
+    await this._pool.query(query);
+  }
+
+  async increaseLikeCountByCommentId(id) {
+    const query = {
+      text: 'UPDATE comments SET like_count = like_count + 1 WHERE id = $1',
+      values: [id],
+    };
+
+    await this._pool.query(query);
+  }
+
+  async decreaseLikeCountByCommentId(id) {
+    const query = {
+      text: 'UPDATE comments SET like_count = like_count - 1 WHERE id = $1',
+      values: [id],
+    };
+
+    await this._pool.query(query);
+  }
 }
 
 module.exports = CommentRepositoryPostgres;

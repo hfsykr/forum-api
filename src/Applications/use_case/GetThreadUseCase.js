@@ -24,6 +24,7 @@ class GetThreadUseCase {
         date: comment.date,
         replies,
         content: !comment.is_delete ? comment.content : '**komentar telah dihapus**',
+        likeCount: comment.like_count,
       };
     }));
 
